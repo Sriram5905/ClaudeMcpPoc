@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+*.log
+
+# Environments
+.env
+.env.*
+env/
+venv/
+.venv/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Flask instance folder
+instance/
+
+# Cache and temp
+tmp/
+temp/
+
+# Node (if any frontend experiments)
+node_modules/
+
+# SpaCy models downloaded locally (if any)
+spacy_models/
+
+# Ignore local MongoDB dump directories
+dump/
+
+# Local uploads
+uploads/

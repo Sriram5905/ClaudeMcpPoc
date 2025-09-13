@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Processing System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Background overlay for depth */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .processor-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.12),
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 48px 48px 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            font-weight: 400;
+            opacity: 0.9;
+            color: #bdc3c7;
+            letter-spacing: 0.5px;
+        }
+
+        .content-section {
+            padding: 48px;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 64px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, #fefbff 0%, #f0f4ff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+        }
+
+        .upload-area:hover::before {
+            left: 100%;
+        }
+
+        .upload-area.dragover {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #fefbff 0%, #eef2ff 100%);
+            transform: scale(1.02);
+            box-shadow: 0 16px 48px rgba(99, 102, 241, 0.2);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .upload-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        .upload-description {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .upload-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+        }
+
+        .upload-button:hover::before {
+            left: 100%;
+        }
+
+        .upload-button:active {
+            transform: translateY(0);
+        }
+
+        .processing-section {
+            display: none;
+            text-align: center;
+            padding: 64px 32px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .processing-loader {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 32px;
+            position: relative;
+        }
+
+        .processing-loader::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .processing-loader::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: calc(100% - 12px);
+            height: calc(100% - 12px);
+            border: 2px solid transparent;
+            border-top: 2px solid #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite reverse;
+        }
+
+        .processing-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .processing-subtext {
+            font-size: 0.95rem;
+            color: #64748b;
+        }
+
+        .success-section {
+            display: none;
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .success-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
+            border-radius: 16px 16px 0 0;
+            margin: -48px -48px 32px -48px;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 32px;
+            animation: successPulse 0.6s ease-out;
+        }
+
+        .success-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .data-preview {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .preview-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .preview-item:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .preview-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6366f1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .preview-value {
+            font-size: 1rem;
+            color: #1e293b;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .skill-badge {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .database-status {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+        }
+
+        .primary-action {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .primary-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        .secondary-action {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .secondary-action:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .error-section {
+            display: none;
+            background: linear-gradient(135deg, #fef2f2 0%, #fde8e8 100%);
+            border: 1px solid #f87171;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin-top: 24px;
+            animation: shake 0.5s ease-out;
+        }
+
+        .error-icon {
+            width: 56px;
+            height: 56px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .error-message {
+            font-size: 1.125rem;
+            color: #dc2626;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .exit-button {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .exit-button:hover {
+            background: rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .content-section {
+                padding: 32px 24px;
+            }
+            
+            .header-section {
+                padding: 32px 24px 28px;
+            }
+            
+            .upload-area {
+                padding: 48px 24px;
+            }
+            
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-button {
+                width: 100%;
+                max-width: 280px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 12px;
+            }
+            
+            .processor-card {
+                border-radius: 16px;
+            }
+            
+            .upload-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="exit-button" onclick="exitApplication()" title="Close Application">×</button>
+    
+    <div class="main-container">
+        <div class="processor-card">
+            <div class="header-section">
+                <h1 class="main-title">Resume Processing System</h1>
+                <p class="subtitle">Intelligent Document Analysis & Data Extraction</p>
+            </div>
+
+            <div class="content-section">
+                <div id="uploadSection">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📄</div>
+                        <h2 class="upload-title">Upload Resume</h2>
+                        <p class="upload-description">
+                            Drag and drop your PDF resume here, or click to browse files.<br>
+                            Maximum file size: 10MB
+                        </p>
+                        <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                        <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+                            Select File
+                        </button>
+                    </div>
+                </div>
+
+                <div class="processing-section" id="processingSection">
+                    <div class="processing-loader"></div>
+                    <div class="processing-text">Processing Resume</div>
+                    <div class="processing-subtext">Extracting and analyzing candidate information...</div>
+                </div>
+
+                <div class="success-section" id="successSection">
+                    <div class="success-header">
+                        <div class="success-icon">✓</div>
+                        <div class="success-title">Processing Complete</div>
+                        <div class="success-message">Resume has been successfully processed and stored</div>
+                    </div>
+                    
+                    <div class="data-preview" id="dataPreview">
+                        <!-- Processing results will be populated here -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-button primary-action" onclick="resetUpload()">
+                            Process Another Resume
+                        </button>
+                        <button class="action-button secondary-action" onclick="exitApplication()">
+                            Close Application
+                        </button>
+                    </div>
+                </div>
+
+                <div class="error-section" id="errorSection">
+                    <div class="error-icon">!</div>
+                    <div class="error-message" id="errorMessage">
+                        An error occurred while processing the file.
+                    </div>
+                    <button class="action-button primary-action" onclick="resetUpload()">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const processingSection = document.getElementById('processingSection');
+        const successSection = document.getElementById('successSection');
+        const errorSection = document.getElementById('errorSection');
+        const dataPreview = document.getElementById('dataPreview');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            if (!uploadArea.contains(e.relatedTarget)) {
+                uploadArea.classList.remove('dragover');
+            }
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                showError('Please upload a PDF file only.');
+                return;
+            }
+
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size exceeds 10MB limit. Please choose a smaller file.');
+                return;
+            }
+
+            // Show processing state
+            showProcessing();
+
+            // Create FormData and upload
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Upload failed with status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showSuccess(data.data);
+                } else {
+                    showError(data.message || 'Processing failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showError('Network error occurred. Please check your connection and try again.');
+            });
+        }
+
+        function showProcessing() {
+            uploadSection.style.display = 'none';
+            processingSection.style.display = 'block';
+            successSection.style.display = 'none';
+            errorSection.style.display = 'none';
+        }
+
+        function showSuccess(data) {
+            processingSection.style.display = 'none';
+            successSection.style.display = 'block';
+            
+            // Process and display the extracted data
+            const skills = data.skills || [];
+            const topSkills = skills.slice(0, 6);
+            
+            const previewHTML = `
+                <div class="preview-grid">
+                    <div class="preview-item">
+                        <div class="preview-label">Full Name</div>
+                        <div class="preview-value">${data.name || 'Not detected'}</div>
+                    </div>
+                    
+                    <div class="preview-item">
+                        <div class="preview-label">Email Address</div>
+                        <div class="preview-value">${data.email || 'Not detected'}</div>
+                    </div>
+                    
+                    <div class="preview-item">
+                        <div class="preview-label">Phone Number</div>
+                        <div class="preview-value">${data.phone || 'Not detected'}</div>
+                    </div>
+                    
+                    <div class="preview-item">
+                        <div class="preview-label">Experience</div>
+                        <div class="preview-value">${(data.experience || []).length} positions found</div>
+                    </div>
+                    
+                    <div class="preview-item">
+                        <div class="preview-label">Education</div>
+                        <div class="preview-value">${(data.education || [])[0] || 'Not specified'}</div>
+                    </div>
+                    
+                    <div class="preview-item">
+                        <div class="preview-label">Record ID</div>
+                        <div class="preview-value">${data._id || 'Auto-generated'}</div>
+                    </div>
+                </div>
+                
+                ${topSkills.length > 0 ? `
+                <div class="preview-item" style="margin-bottom: 16px;">
+                    <div class="preview-label">Key Skills (${skills.length} total)</div>
+                    <div class="skills-container">
+                        ${topSkills.map(skill => `<span class="skill-badge">${skill}</span>`).join('')}
+                        ${skills.length > 6 ? `<span class="skill-badge">+${skills.length - 6} more</span>` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${data.summary ? `
+                <div class="preview-item">
+                    <div class="preview-label">Professional Summary</div>
+                    <div class="preview-value">${data.summary.length > 200 ? data.summary.substring(0, 200) + '...' : data.summary}</div>
+                </div>
+                ` : ''}
+                
+                <div class="database-status">
+                    ✓ Successfully stored in database
+                </div>
+            `;
+            
+            dataPreview.innerHTML = previewHTML;
+        }
+
+        function showError(message) {
+            uploadSection.style.display = 'none';
+            processingSection.style.display = 'none';
+            successSection.style.display = 'none';
+            errorSection.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+
+        function resetUpload() {
+            uploadSection.style.display = 'block';
+            processingSection.style.display = 'none';
+            successSection.style.display = 'none';
+            errorSection.style.display = 'none';
+            
+            // Reset form
+            fileInput.value = '';
+            uploadArea.classList.remove('dragover');
+        }
+
+        function exitApplication() {
+            if (confirm('Are you sure you want to close the application?')) {
+                window.close();
+                // Fallback for browsers that don't allow window.close()
+                setTimeout(() => {
+                    window.location.href = 'about:blank';
+                }, 100);
+            }
+        }
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Resume Processing System initialized');
+        });
+    </script>
+</body>
+</html>
